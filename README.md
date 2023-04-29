@@ -194,7 +194,26 @@ RapidOCR_json.exe --doAngle=0 --mostAngle=0 --numThread=12 --padding=100 --image
 
 ## 通过API调用
 
-待填坑……
+### 1. Python API
+
+[资源目录](api/python)
+
+使用示例：
+```python
+import os
+import sys
+
+from RapidOCR_api import OcrAPI
+
+ocrPath = '引擎路径/RapidOCR_json.exe'
+ocr = OcrAPI(ocrPath)
+res = ocr.run('样例.png')
+
+print('OCR识别结果：\n', res)
+ocr.stop()
+```
+
+其他待填坑……
 
 
 ### 项目构建指南
