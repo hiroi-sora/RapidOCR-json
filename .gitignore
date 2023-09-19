@@ -1,0 +1,4 @@
+RapidOCR-json.code-workspace
+cpp/build-win-vs2019-x64
+cpp/onnxruntime-static
+cpp/opencv-static
