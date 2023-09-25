@@ -5,6 +5,7 @@ import subprocess  # 进程，管道
 from psutil import Process as psutilProcess  # 内存监控
 from sys import platform as sysPlatform  # popen静默模式
 from json import loads as jsonLoads, dumps as jsonDumps
+from base64 import b64encode # base64 编码
 
 InitTimeout = 15  # 初始化超时时间，秒
 
@@ -62,38 +63,71 @@ class OcrAPI:
                 break
         cancelTimeout()
 
-    def run(self, imgPath):
-        """对一张图片文字识别。\n
-        :exePath: 图片路径。\n
-        :return:  {'code': 识别码, 'data': 内容列表或错误信息字符串}\n"""
+    def runDict(self, writeDict: dict):
+        """传入指令字典，发送给引擎进程。\n
+        `writeDict`: 指令字典。\n
+        `return`:  {"code": 识别码, "data": 内容列表或错误信息字符串}\n"""
         if not self.ret.poll() == None:
             return {'code': 400, 'data': f'子进程已结束。'}
-        writeDict = {'imagePath': imgPath}
         try:  # 输入地址转为ascii转义的json字符串，规避编码问题
-            wirteStr = jsonDumps(
-                writeDict, ensure_ascii=True, indent=None)+"\n"
+            writeStr = jsonDumps(writeDict, ensure_ascii=True, indent=None)+"\n"
         except Exception as e:
             return {'code': 403, 'data': f'输入字典转json失败。字典：{writeDict} || 报错：[{e}]'}
         # 输入路径
         try:
-            self.ret.stdin.write(wirteStr.encode('ascii'))
+            self.ret.stdin.write(writeStr.encode('ascii'))
             self.ret.stdin.flush()
         except Exception as e:
             return {'code': 400, 'data': f'向识别器进程写入图片地址失败，疑似子进程已崩溃。{e}'}
-        if imgPath[-1] == '\n':
-            imgPath = imgPath[:-1]
         # 获取返回值
         try:
             getStr = self.ret.stdout.readline().decode('utf-8', errors='ignore')
         except Exception as e:
-            return {'code': 401, 'data': f'读取识别器进程输出值失败，疑似传入了不存在或无法识别的图片 \"{imgPath}\" 。{e}'}
+            return {'code': 401, 'data': f'读取识别器进程输出值失败，疑似传入了不存在或无法识别的图片。{e}'}
         try:
             return jsonLoads(getStr)
         except Exception as e:
-            return {'code': 402, 'data': f'识别器输出值反序列化JSON失败，疑似传入了不存在或无法识别的图片 \"{imgPath}\" 。异常信息：{e}。原始内容：{getStr}'}
+            return {'code': 402, 'data': f'识别器输出值反序列化JSON失败，疑似传入了不存在或无法识别的图片。异常信息：{e}。原始内容：{getStr}'}
 
+    def run(self, imgPath: str):
+        """对一张本地图片进行文字识别。\n
+        `exePath`: 图片路径。\n
+        `return`:  {"code": 识别码, "data": 内容列表或错误信息字符串}\n"""
+        writeDict = {"image_path": imgPath}
+        return self.runDict(writeDict)
+    
+    def runBase64(self, imageBase64: str):
+        """对一张编码为base64字符串的图片进行文字识别。\n
+        `imageBase64`: 图片base64字符串。\n
+        `return`:  {"code": 识别码, "data": 内容列表或错误信息字符串}\n"""
+        writeDict = {"image_base64": imageBase64}
+        return self.runDict(writeDict)
+    
+    def runBytes(self, imageBytes):
+        """对一张图片的字节流信息进行文字识别。\n
+        `imageBytes`: 图片字节流。\n
+        `return`:  {"code": 识别码, "data": 内容列表或错误信息字符串}\n"""
+        imageBase64 = b64encode(imageBytes).decode('utf-8')
+        return self.runBase64(imageBase64)
+    
     def stop(self):
         self.ret.kill()  # 关闭子进程。误重复调用似乎不会有坏的影响
+
+    @staticmethod
+    def printResult(res: dict):
+        """用于调试，格式化打印识别结果。\n
+        `res`: OCR识别结果。"""
+
+        # 识别成功
+        if res["code"] == 100:
+            index = 1
+            for line in res["data"]:
+                print(f"{index}-置信度：{round(line['score'], 2)}，文本：{line['text']}")
+                index+=1
+        elif res["code"] == 100:
+            print("图片中未识别出文字。")
+        else:
+            print(f"图片识别失败。错误码：{res['code']}，错误信息：{res['data']}")
 
     def __del__(self):
         self.stop()
