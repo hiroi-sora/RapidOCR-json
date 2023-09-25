@@ -1,6 +1,4 @@
-# RapidOCR-json 图片转文字程序 v0.1.0
-
-本项目尚属于开发阶段。
+# RapidOCR-json 图片转文字程序
 
 这是一个基于 [RapidOcrOnnx](https://github.com/RapidAI/RapidOcrOnnx) 的离线图片OCR文字识别程序。通过管道等方式输入本地图片路径，输出识别结果json字符串。适用于 `Win7 x64` 及以上的系统。
 
