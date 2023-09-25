@@ -34,7 +34,7 @@ RapidOCR-json 与 PaddleOCR-json 无论使用上还是功能上都极为相似�
 
 ## 准备工作
 
-下载 [RapidOCR-json v0.1.0](https://github.com/hiroi-sora/RapidOCR-json/releases/tag/v0.1.0) 并解压，即可。
+下载 [RapidOCR-json v0.2.0](https://github.com/hiroi-sora/RapidOCR-json/releases/tag/v0.2.0) 并解压，即可。
 
 ### 简单试用
 
