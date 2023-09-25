@@ -10,7 +10,7 @@
 // 识别成功
 #define CODE_OK 100      // 成功，且识别出文字
 #define CODE_OK_NONE 101 // 成功，且未识别到文字
-#define MSG_OK_NONE(p) "No text found in image. Path: \"" + p + "\""
+#define MSG_OK_NONE "No text found in image."
 // 按路径读图，失败
 #define CODE_ERR_PATH_EXIST 200 // 图片路径不存在
 #define MSG_ERR_PATH_EXIST(p) "Image path dose not exist. Path: \"" + p + "\""
@@ -41,6 +41,11 @@
 #define MSG_ERR_CLIP_BITMAP "Getting clipboard bitmap bits failed."
 #define CODE_ERR_CLIP_CHANNEL 217 // 剪贴板中位图的通道数不支持 ( nChannels 不为1，3，4 )
 #define MSG_ERR_CLIP_CHANNEL(n) "Clipboard number of image channels is not valid. Number: " + std::to_string(n)
+// base64读图，失败
+#define CODE_ERR_BASE64_DECODE 300 // base64字符串解析为string失败 
+#define MSG_ERR_BASE64_DECODE "Base64 decode failed."
+#define CODE_ERR_BASE64_IM_DECODE 301 //  base64字符串解析成功，但读取到的内容无法被opencv解码 
+#define MSG_ERR_BASE64_IM_DECODE "Base64 data imdecode failed."
 // 未知
 #define CODE_ERR_UNKNOW 299 // 未知异常
 #define MSG_ERR_UNKNOW "An unknown error has occurred."

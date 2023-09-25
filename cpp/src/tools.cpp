@@ -7,6 +7,7 @@
 #include "tools.h"
 #include "tools_flags.h" // 标志
 #include "opencv2/imgproc.hpp" // 色彩空间转换
+#include "base64.h" // base64库
 
 // 编码转换
 #include<codecvt>
@@ -108,11 +109,10 @@ namespace tool {
     }
 
     // {"image_path":"D:\Test\Test.png"}
-    // 加载一条json，传入str_in字符串，将str_in更改为json中的路径
-    void load_json_str(string& str_in) {
+    // 加载一条json，传入str_in字符串，将str_in更改为json中的路径或base64字符串。返回类型标识。
+    std::string load_json_str(string& str_in) {
         set_state(); // 报告状态：初始化
         string origin_str = str_in;
-        bool is_image = false;
         try {
             auto j = json::parse(str_in); // 转json对象
             for (auto& el : j.items()) { // 遍历键值 
@@ -121,21 +121,24 @@ namespace tool {
                 if (vallen > 2 && value[0] == '\"' && value[vallen - 1] == '\"') {
                     value = value.substr(1, vallen - 2); // 删去nlohmann字符串的两端引号
                 }
-                if (el.key() == "imagePath") { // 图片路径
-                    str_in = value; // 直接返回utf-8路径
-                    is_image = true;
+                if (el.key() == "image_path") { // 图片路径
+                    str_in = value;
+                    return "path";
+                }
+                else if (el.key() == "image_base64") { // 图片base64
+                    str_in = value;
+                    return "base64";
                 }
                 // 其它参数，暂不考虑
             }
-            if (!is_image) { // 转json成功，且json中没有图片路径 
-                set_state(CODE_ERR_JSON_NO_IMAGE, MSG_ERR_JSON_NO_IMAGE(origin_str)); // 报告状态：未找到图片路径
-                str_in = "";
-            }
+            set_state(CODE_ERR_JSON_NO_IMAGE, MSG_ERR_JSON_NO_IMAGE(origin_str)); // 报告状态：未找到图片路径
+            str_in = "";
         }
         catch (...) {
             set_state(CODE_ERR_LOAD_JSON, MSG_ERR_LOAD_JSON(origin_str)); // 报告状态：反序列化JSON失败
             str_in = "";
         }
+        return "";
     }
 
 
@@ -292,7 +295,6 @@ namespace tool {
         return cv::Mat();
     }
 
-    // ===== 每回合的入口：读取图片 =============
     // 代替 cv::imread ，从路径pathU8读入一张图片。pathU8必须为utf-8的string
     cv::Mat imread_utf8(string pathU8, int flags) {
         set_state(); // 报告状态：初始化
@@ -309,6 +311,30 @@ namespace tool {
             return cv::Mat();
         }
         return imread_wstr(wpath);
+    }
+
+    // 输入base64编码的字符串，返回Mat
+    cv::Mat imread_base64(string b64str, int flag) {
+        std::string decoded_string;
+        try {
+            decoded_string = base64_decode(b64str);
+        }
+        catch (...) {
+            set_state(CODE_ERR_BASE64_DECODE, MSG_ERR_BASE64_DECODE); // 报告状态：解析失败 
+            return cv::Mat();
+        }
+        try {
+            std::vector<uchar> data(decoded_string.begin(), decoded_string.end());
+            cv::Mat img = cv::imdecode(data, flag);
+            if (img.empty()) {
+                set_state(CODE_ERR_BASE64_IM_DECODE, MSG_ERR_BASE64_IM_DECODE); // 报告状态：转Mat失败 
+            }
+            return img;
+        }
+        catch (...) {
+            set_state(CODE_ERR_BASE64_IM_DECODE, MSG_ERR_BASE64_IM_DECODE); // 报告状态：转Mat失败 
+            return cv::Mat();
+        }
     }
 }
 

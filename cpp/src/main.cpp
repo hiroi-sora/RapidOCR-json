@@ -3,7 +3,7 @@
 
 
 // 版本信息
-#define PROJECT_VER "v1.0.0"
+#define PROJECT_VER "v1.1.0"
 #define PROJECT_NAME "RapidOCR-json " PROJECT_VER
 
 #ifndef __JNI__
@@ -37,23 +37,15 @@ void printHelp(FILE *out, char *argv0) {
     fprintf(out, example2Msg, argv0);
 }
 
+
 // ==================== 执行一次OCR任务 ==================== 
-void runOCR(std::string imgPath) 
+void runOCR(const cv::Mat& mat)
 {
     OcrLite &ocrLite = *OCRLiteP; // 获取引擎对象 
-    std::string imgDir, imgName;
-    // 图片路径拆分
-	imgDir.assign(imgPath.substr(0, imgPath.find_last_of('/') + 1));
-	imgName.assign(imgPath.substr(imgPath.find_last_of('/') + 1));
-    // 初始化可视化输出
-    if (ensureLogger) {
-        ocrLite.enableResultTxt(imgDir.c_str(), imgName.c_str());
-    }
 
     // 执行一次OCR 
-    OcrResult result = ocrLite.detect(imgDir.c_str(), imgName.c_str(), padding, maxSideLen,
+    OcrResult result = ocrLite.detect(mat, padding, maxSideLen,
         boxScoreThresh, boxThresh, unClipRatio, doAngle, mostAngle);
-    ocrLite.Logger("%s\n", result.strRes.c_str());
 
     // 输出
     // 3.1. 输出：识别失败
@@ -89,24 +81,44 @@ void runOCR(std::string imgPath)
     }
     // 3.3. 输出：识别成功，无文字（rec未检出）
     if (isEmpty) {
-        print_ocr_fail(CODE_OK_NONE, MSG_OK_NONE(imgPath));
+        print_ocr_fail(CODE_OK_NONE, MSG_OK_NONE);
         return;
     }
     // 3.4. 输出：输出正常情况
     else {
         print_json(outJ);
     }
+}
 
+// 路径识图 
+void runPath(std::string imgPath) {
+    cv::Mat img = tool::imread_utf8(imgPath, cv::IMREAD_COLOR);
+    if (img.empty()) {
+        tool::print_now_fail();
+    }
+    else {
+        runOCR(img);
+    }
+}
+
+// base64识图 
+void runBase64(std::string imgBase64) {
+    cv::Mat img = tool::imread_base64(imgBase64, cv::IMREAD_COLOR);
+    if (img.empty()) {
+        tool::print_now_fail();
+    }
+    else {
+        runOCR(img);
+    }
 }
 
 // ==================== 启动OCR循环 ==================== 
 void startOCR(std::string imgPath="")
 {
     if (!imgPath.empty()) { // 只执行一次 
-        runOCR(imgPath);
+        runPath(imgPath);
     }
-    else // 重复执行 
-    {
+    else { // 重复执行 
         std::string jsonIn;
         while (1) {
             jsonIn = "";
@@ -114,13 +126,18 @@ void startOCR(std::string imgPath="")
             int strLen = jsonIn.length();
             // 若为json字符串，则解析 
             if (strLen > 2 && jsonIn[0] == '{' && jsonIn[strLen - 1] == '}') {
-                tool::load_json_str(jsonIn);
+                std::string type = tool::load_json_str(jsonIn); // 解析并获取类型
                 if (jsonIn.empty()) { // 未解析出图片
                     tool::print_now_fail(); // 输出错误
                     continue;
                 }
-            } // 到这一步，img_path为 utf-8 纯路径字符串
-            runOCR(jsonIn);
+                if(type == "path")
+                    runPath(jsonIn);
+                else if (type == "base64")
+                    runBase64(jsonIn);
+                continue;
+            }
+            tool::print_now_fail(); // 输出错误
         }
     }
 }

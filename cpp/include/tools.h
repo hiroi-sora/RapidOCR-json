@@ -36,9 +36,10 @@ namespace tool {
 	void print_json(const nlohmann::json&);
 	void print_ocr_fail(int, const std::string&); 
 	void print_now_fail();
-	void load_json_str(std::string&);
+	std::string load_json_str(std::string&);
 
-	cv::Mat imread_utf8(std::string, int flags = cv::IMREAD_COLOR);
+    cv::Mat imread_utf8(std::string, int flags = cv::IMREAD_COLOR);
+    cv::Mat imread_base64(std::string, int flags = cv::IMREAD_COLOR);
 }
 
 #endif
