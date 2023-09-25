@@ -40,15 +40,21 @@ RapidOCR-json 与 PaddleOCR-json 无论使用上还是功能上都极为相似�
 
 方式一：
 
-打开控制台，输入 `path/RapidOCR-json.exe --imagePath=path/test1.png` 。
+打开控制台，输入 `path/RapidOCR-json.exe --image_path=path/test1.png` 。
 
 方式二：
 
-直接双击打开 `RapidOCR_json.exe` 。等程序初始化完毕输出`OCR init completed.`后，直接输入图片路径，回车。
+直接双击打开 `RapidOCR_json.exe` 。等程序初始化完毕输出`OCR init completed.`。
 
-若路径存在中文，则需要通过ASCII转义的json字符串输入。如：
+使用json字符串输入图片路径，建议使用ascii转义。如：
 
-`{"imagePath":"D:/\u6d4b\u8bd5\u56fe\u7247.png"}`
+`{"image_path":"D:/\u6d4b\u8bd5\u56fe\u7247.png"}`
+
+也支持传入图片base64编码的字符串。如：
+
+`{"image_base64":"……"}`
+
+还可以直接使用 [Python API](api/python/) 。
 
 
 ## 指令说明
@@ -69,28 +75,26 @@ RapidOCR-json 与 PaddleOCR-json 无论使用上还是功能上都极为相似�
 | boxScoreThresh | 文字框置信度门限值                   | 0.5                                   |
 | boxThresh      |                                      | 0.3                                   |
 | unClipRatio    | 单个文字框大小倍率                   | 1.6                                   |
-| imagePath      | 初始图片路径                         | ""                                    |
+| image_path     | 初始图片路径                         | ""                                    |
 
 
 例1：（启动时传入图片路径，执行一次识别，然后关闭程序）
 ```
-RapidOCR_json.exe  --imagePath="D:/images/test(1).png"
+RapidOCR_json.exe  --image_path="D:/images/test(1).png"
 输出: 识别结果
 ```
 
-例2：（启动时不传入图片路径，进入无限循环，不断接受图片路径或json输入）
+例2：（启动时不传入图片路径，进入无限循环，不断接受json输入）
 ```
 RapidOCR_json.exe  --ensureAscii=1
 输出: OCR init completed.
-D:/images/test(1).png
-输出: 识别结果
-{"imagePath": "D:/images/test(1).png"}
+{"image_path": "D:/images/test(1).png"}
 输出: 识别结果
 ```
 
 例3：（手动指定参数）
 ```
-RapidOCR_json.exe --doAngle=0 --mostAngle=0 --numThread=12 --padding=100 --imagePath="D:/images/test(1).png"
+RapidOCR_json.exe --doAngle=0 --mostAngle=0 --numThread=12 --padding=100 --image_path="D:/images/test(1).png"
 ```
 
 
@@ -227,5 +231,9 @@ ocr.stop()
 > “JSON for Modern C++”
 
 ## 更新日志
+
+#### v0.2.0 `2023.9.25` 
+- 路径识图的key由 `imagePath` 改为 `image_path`
+- 新功能：base64识图，key为 `image_base64`
 
 #### v0.1.0 `2023.4.29` 

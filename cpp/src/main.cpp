@@ -3,7 +3,7 @@
 
 
 // 版本信息
-#define PROJECT_VER "v1.1.0"
+#define PROJECT_VER "v0.2.0"
 #define PROJECT_NAME "RapidOCR-json " PROJECT_VER
 
 #ifndef __JNI__
