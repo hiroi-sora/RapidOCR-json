@@ -1,4 +1,8 @@
-# RapidOCR-json 图片转文字程序
+##### 离线OCR组件 系列项目：
+- [PaddleOCR-json](https://github.com/hiroi-sora/PaddleOCR-json)
+- **RapidOCR-json**
+
+# RapidOCR-json
 
 这是一个基于 [RapidOcrOnnx](https://github.com/RapidAI/RapidOcrOnnx) 的离线图片OCR文字识别程序。通过管道等方式输入本地图片路径，输出识别结果json字符串。适用于 `Win7 x64` 及以上的系统。
 
